@@ -80,7 +80,7 @@
     /* ---------- Content ---------- */
     main {
       position: relative; z-index: 2;
-      min-height: 100svh;
+      min-height: 100vh; min-height: 100svh;
       display: grid; place-items: center;
       padding: 24px 20px calc(80px + env(safe-area-inset-bottom));
       text-align: center;
@@ -88,7 +88,7 @@
     .card { max-width: 900px; }
 
     .kicker {
-      font-size: clamp(0.8rem, 1.6vw, 1rem);
+      font-size: clamp(0.72rem, min(1.6vw, 1.9vh), 1.3rem);
       letter-spacing: 0.55em; text-transform: uppercase;
       color: var(--ink-soft);
       opacity: 0; animation: rise 1.8s 0.4s ease-out forwards;
@@ -96,7 +96,7 @@
     }
     .names {
       font-family: "Pinyon Script", cursive; font-weight: 400;
-      font-size: clamp(3.6rem, 12vw, 8.5rem);
+      font-size: clamp(3.3rem, min(12vw, 16vh), 11rem);
       line-height: 1.05; margin: 0.25em 0 0.1em;
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 6px 40px rgba(0, 0, 0, 0.45);
       opacity: 0; animation: rise 2.2s 0.9s ease-out forwards;
@@ -115,7 +115,7 @@
 
     .soon {
       font-weight: 300; font-style: italic;
-      font-size: clamp(2.2rem, 7vw, 4.8rem);
+      font-size: clamp(2.2rem, min(7vw, 10vh), 6.2rem);
       letter-spacing: 0.04em;
       white-space: nowrap;
       filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.45));
@@ -134,7 +134,7 @@
 
     .line {
       margin-top: 1.4rem;
-      font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+      font-size: clamp(1rem, min(2.4vw, 2.8vh), 1.8rem);
       color: var(--ink-soft); font-style: italic;
       text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
       opacity: 0; animation: rise 2s 4.2s ease-out forwards;
@@ -144,7 +144,8 @@
     /* ---------- Footer: place name + progress ---------- */
     .place {
       position: fixed; z-index: 2; left: 0; right: 0;
-      bottom: calc(22px + env(safe-area-inset-bottom));
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      gap: 4px;
       display: flex; flex-direction: column; align-items: center; gap: 12px;
       opacity: 0; animation: rise 2s 5s ease-out forwards;
     }
@@ -155,15 +156,17 @@
     }
     .place-name.fade { opacity: 0; }
     .dots { display: flex; gap: 10px; }
+    .dots { gap: 4px; }
     .dots button {
-      width: 28px; height: 3px; border: 0; border-radius: 3px; cursor: pointer;
-      background: rgba(255, 255, 255, 0.3); overflow: hidden; position: relative;
-      padding: 0;
+      width: 36px; height: 24px; border: 0; cursor: pointer;
+      background: none; position: relative; padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
-    .dots button::after {
-      content: ""; position: absolute; inset: 0; transform: scaleX(0); transform-origin: left;
-      background: var(--gold);
+    .dots button::before, .dots button::after {
+      content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 3px; margin-top: -1.5px;
+      border-radius: 3px; background: rgba(255, 255, 255, 0.3);
     }
+    .dots button::after { transform: scaleX(0); transform-origin: left; background: var(--gold); }
     .dots button.on::after { animation: fill var(--slide) linear forwards; }
     .dots button.seen::after { transform: scaleX(1); opacity: 0.45; }
     @keyframes fill { to { transform: scaleX(1); } }
@@ -178,6 +181,22 @@
       .credit { display: none; }
       .place-name { letter-spacing: 0.22em; font-size: 0.72rem; }
     }
+    /* phones turned sideways / short screens */
+    @media (max-height: 500px) and (orientation: landscape) {
+      main { padding: 12px 20px 56px; }
+      .kicker { display: none; }
+      .names { margin: 0 0 0.05em; }
+      .rule { margin: 0.2rem auto 0.5rem; }
+      .line { margin-top: 0.5rem; }
+      .place-name { display: none; }
+    }
+    /* big screens: let the type breathe */
+    @media (min-width: 1800px) and (min-height: 1000px) {
+      .card { max-width: 1400px; }
+      .place-name { font-size: 1rem; }
+      .dots button { width: 48px; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.3s !important; }
       .soon .ch { opacity: 1; filter: none; transform: none; }
@@ -287,6 +306,26 @@
         else { im.onload = show; im.onerror = show; }
       }
       go(0);
+
+      // swipe left/right on phones & tablets, arrow keys on laptops
+      var sx = null, sy = null;
+      addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+      addEventListener("touchend", function (e) {
+        if (sx === null) return;
+        var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go((cur + (dx < 0 ? 1 : els.length - 1)) % els.length);
+        sx = null;
+      }, { passive: true });
+      addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight") go((cur + 1) % els.length);
+        if (e.key === "ArrowLeft") go((cur + els.length - 1) % els.length);
+      });
+
+      // pause the slideshow while the tab is hidden, so it resumes fresh
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) clearTimeout(timer);
+        else go((cur + 1) % els.length);
+      });
 
       // "Happening Soon" — letters drift in one by one, then a gentle golden shimmer
       var soon = document.getElementById("soon");
