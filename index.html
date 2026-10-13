@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rutu &amp; Malav · Happening Soon</title>
+  <meta name="description" content="Rutu & Malav — something beautiful is happening soon.">
+  <meta name="theme-color" content="#1d2a3a">
+  <meta property="og:title" content="Rutu & Malav · Happening Soon">
+  <meta property="og:description" content="Something beautiful is on its way.">
+  <meta property="og:image" content="https://rutuwedsmalav.com/assets/img/swiss-1-m.jpg">
+  <meta property="og:url" content="https://rutuwedsmalav.com/">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="assets/img/swiss-1.jpg" media="(min-width: 900px)">
+  <link rel="preload" as="image" href="assets/img/swiss-1-m.jpg" media="(max-width: 899px)">
+  <style>
+    :root {
+      --ink: #fffdf8;
+      --ink-soft: rgba(255, 253, 248, 0.82);
+      --gold: #f3dcb0;
+      --night: #1d2a3a;
+      --slide: 9s;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--night);
+      color: var(--ink);
+      font-family: "Cormorant Garamond", Georgia, serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------- Landscape slideshow ---------- */
+    .scenes { position: fixed; inset: 0; }
+    .scene {
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 2.6s ease-in-out;
+      overflow: hidden;
+    }
+    .scene.on { opacity: 1; }
+    .scene img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scale(1.12);
+      will-change: transform;
+    }
+    .scene.on img, .scene.leaving img { animation: drift calc(var(--slide) + 3s) ease-out forwards; }
+    .scene:nth-child(even).on img, .scene:nth-child(even).leaving img { animation-name: drift-alt; }
+    @keyframes drift {
+      from { transform: scale(1.14) translate3d(-1.5%, 0.8%, 0); }
+      to   { transform: scale(1.02) translate3d(1%, -0.6%, 0); }
+    }
+    @keyframes drift-alt {
+      from { transform: scale(1.02) translate3d(1.2%, -0.4%, 0); }
+      to   { transform: scale(1.13) translate3d(-1%, 0.9%, 0); }
+    }
+
+    /* soft light + vignette so text stays readable on any photo */
+    .veil {
+      position: fixed; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 48% 32% at 50% 52%, rgba(10, 18, 30, 0.38), rgba(10, 18, 30, 0) 75%),
+        radial-gradient(ellipse at 50% 45%, rgba(10, 18, 30, 0.22) 0%, rgba(10, 18, 30, 0.18) 45%, rgba(10, 18, 30, 0.55) 100%),
+        linear-gradient(to bottom, rgba(10, 18, 30, 0.25), rgba(10, 18, 30, 0) 28%, rgba(10, 18, 30, 0) 70%, rgba(10, 18, 30, 0.5));
+    }
+    .glow {
+      position: fixed; inset: -20%; pointer-events: none; mix-blend-mode: soft-light;
+      background: radial-gradient(circle at 30% 20%, rgba(255, 222, 170, 0.35), transparent 45%);
+      animation: sun 18s ease-in-out infinite alternate;
+    }
+    @keyframes sun { to { transform: translate3d(18%, 6%, 0); } }
+
+    #snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    /* ---------- Content ---------- */
+    main {
+      position: relative; z-index: 2;
+      min-height: 100svh;
+      display: grid; place-items: center;
+      padding: 24px 20px calc(80px + env(safe-area-inset-bottom));
+      text-align: center;
+    }
+    .card { max-width: 900px; }
+
+    .kicker {
+      font-size: clamp(0.8rem, 1.6vw, 1rem);
+      letter-spacing: 0.55em; text-transform: uppercase;
+      color: var(--ink-soft);
+      opacity: 0; animation: rise 1.8s 0.4s ease-out forwards;
+      padding-left: 0.55em;
+    }
+    .names {
+      font-family: "Pinyon Script", cursive; font-weight: 400;
+      font-size: clamp(3.6rem, 12vw, 8.5rem);
+      line-height: 1.05; margin: 0.25em 0 0.1em;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 6px 40px rgba(0, 0, 0, 0.45);
+      opacity: 0; animation: rise 2.2s 0.9s ease-out forwards;
+    }
+    .names .amp { color: var(--gold); padding: 0 0.12em; }
+
+    .rule {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      margin: 0.6rem auto 1.4rem;
+      opacity: 0; animation: rise 1.6s 1.8s ease-out forwards;
+    }
+    .rule span { height: 1px; width: 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: grow 2.4s 2s ease-out forwards; }
+    .rule svg { width: 18px; height: 18px; fill: var(--gold); animation: beat 2.8s 3s ease-in-out infinite; }
+    @keyframes grow { to { width: min(22vw, 140px); } }
+    @keyframes beat { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.25); } 24% { transform: scale(1); } 36% { transform: scale(1.15); } 48% { transform: scale(1); } }
+
+    .soon {
+      font-weight: 300; font-style: italic;
+      font-size: clamp(2.2rem, 7vw, 4.8rem);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.45));
+    }
+    .soon .ch {
+      display: inline-block;
+      opacity: 0; filter: blur(12px);
+      transform: translateY(0.4em);
+      animation: letter 1.4s ease-out forwards;
+      background: linear-gradient(100deg, var(--ink) 40%, var(--gold) 50%, var(--ink) 60%) 0 0 / 300% 100%;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .soon.shine .ch { animation: shimmer 6s ease-in-out infinite; opacity: 1; filter: none; transform: none; }
+    @keyframes letter { to { opacity: 1; filter: blur(0); transform: none; } }
+    @keyframes shimmer { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0% 0; } }
+
+    .line {
+      margin-top: 1.4rem;
+      font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+      color: var(--ink-soft); font-style: italic;
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
+      opacity: 0; animation: rise 2s 4.2s ease-out forwards;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- Footer: place name + progress ---------- */
+    .place {
+      position: fixed; z-index: 2; left: 0; right: 0;
+      bottom: calc(22px + env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      opacity: 0; animation: rise 2s 5s ease-out forwards;
+    }
+    .place-name {
+      font-size: 0.82rem; letter-spacing: 0.35em; text-transform: uppercase;
+      color: var(--ink-soft); min-height: 1.2em;
+      transition: opacity 1.2s ease;
+    }
+    .place-name.fade { opacity: 0; }
+    .dots { display: flex; gap: 10px; }
+    .dots button {
+      width: 28px; height: 3px; border: 0; border-radius: 3px; cursor: pointer;
+      background: rgba(255, 255, 255, 0.3); overflow: hidden; position: relative;
+      padding: 0;
+    }
+    .dots button::after {
+      content: ""; position: absolute; inset: 0; transform: scaleX(0); transform-origin: left;
+      background: var(--gold);
+    }
+    .dots button.on::after { animation: fill var(--slide) linear forwards; }
+    .dots button.seen::after { transform: scaleX(1); opacity: 0.45; }
+    @keyframes fill { to { transform: scaleX(1); } }
+    .credit {
+      position: fixed; z-index: 2; right: 14px; bottom: 8px;
+      font-size: 0.65rem; color: rgba(255, 255, 255, 0.4); letter-spacing: 0.05em;
+    }
+    .credit a { color: inherit; }
+
+    @media (max-width: 600px) {
+      .kicker { letter-spacing: 0.4em; }
+      .credit { display: none; }
+      .place-name { letter-spacing: 0.22em; font-size: 0.72rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.3s !important; }
+      .soon .ch { opacity: 1; filter: none; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scenes" id="scenes"></div>
+  <div class="glow"></div>
+  <div class="veil"></div>
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <main>
+    <div class="card">
+      <p class="kicker">A new chapter begins</p>
+      <h1 class="names">Rutu<span class="amp">&amp;</span>Malav</h1>
+      <div class="rule" aria-hidden="true">
+        <span></span>
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 5.2 3 1.6-1.8 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>
+        <span></span>
+      </div>
+      <h2 class="soon" id="soon" aria-label="Happening Soon">Happening Soon</h2>
+      <p class="line">Something beautiful is on its way.</p>
+    </div>
+  </main>
+
+  <div class="place">
+    <div class="place-name" id="placeName"></div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <div class="credit">Photos: <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></div>
+
+  <script>
+    (function () {
+      var scenes = [
+        { img: "swiss-1", place: "Lauterbrunnen · Bern" },
+        { img: "swiss-2", place: "Grindelwald · Bernese Oberland" },
+        { img: "swiss-3", place: "Swiss Alps" },
+        { img: "swiss-4", place: "Matterhorn · Zermatt" },
+        { img: "swiss-5", place: "Above the clouds · Valais" }
+      ];
+      var SLIDE_MS = 9000;
+      var holder = document.getElementById("scenes");
+      var dots = document.getElementById("dots");
+      var placeName = document.getElementById("placeName");
+      var small = window.matchMedia("(max-width: 899px)").matches;
+
+      var els = scenes.map(function (s, i) {
+        var d = document.createElement("div");
+        d.className = "scene";
+        var im = document.createElement("img");
+        im.alt = s.place;
+        im.decoding = "async";
+        im.dataset.src = "assets/img/" + s.img + (small ? "-m" : "") + ".jpg";
+        if (i === 0) im.src = im.dataset.src;
+        d.appendChild(im);
+        holder.appendChild(d);
+
+        var b = document.createElement("button");
+        b.setAttribute("aria-label", "Show " + s.place);
+        b.addEventListener("click", function () { go(i); });
+        dots.appendChild(b);
+        return d;
+      });
+
+      function load(i) {
+        var im = els[i].firstChild;
+        if (!im.src) im.src = im.dataset.src;
+      }
+
+      var cur = -1, timer;
+      function go(n) {
+        clearTimeout(timer);
+        load(n);
+        load((n + 1) % els.length);
+        var im = els[n].firstChild;
+        var show = function () {
+          if (cur >= 0 && cur !== n) {
+            var prev = els[cur];
+            prev.classList.remove("on");
+            prev.classList.add("leaving");
+            setTimeout(function () { prev.classList.remove("leaving"); }, 2700);
+          }
+          els[n].classList.remove("leaving");
+          // restart the slow zoom
+          var img = els[n].firstChild;
+          img.style.animation = "none"; void img.offsetWidth; img.style.animation = "";
+          els[n].classList.add("on");
+
+          [].forEach.call(dots.children, function (b, i) {
+            b.classList.remove("on");
+            b.classList.toggle("seen", i < n);
+            void b.offsetWidth;
+          });
+          dots.children[n].classList.add("on");
+
+          placeName.classList.add("fade");
+          setTimeout(function () {
+            placeName.textContent = scenes[n].place;
+            placeName.classList.remove("fade");
+          }, 600);
+
+          cur = n;
+          timer = setTimeout(function () { go((n + 1) % els.length); }, SLIDE_MS);
+        };
+        if (im.complete && im.naturalWidth) show();
+        else { im.onload = show; im.onerror = show; }
+      }
+      go(0);
+
+      // "Happening Soon" — letters drift in one by one, then a gentle golden shimmer
+      var soon = document.getElementById("soon");
+      var text = soon.textContent;
+      soon.textContent = "";
+      var base = 2.4, step = 0.09;
+      text.split("").forEach(function (c, i) {
+        var s = document.createElement("span");
+        s.className = "ch";
+        s.setAttribute("aria-hidden", "true");
+        s.textContent = c === " " ? " " : c;
+        s.style.animationDelay = (base + i * step) + "s";
+        soon.appendChild(s);
+      });
+      setTimeout(function () {
+        soon.classList.add("shine");
+        [].forEach.call(soon.children, function (s, i) { s.style.animationDelay = (i * 0.06) + "s"; });
+      }, (base + text.length * step + 1.6) * 1000);
+
+      // Soft drifting snow / petals
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var cv = document.getElementById("snow");
+      var ctx = cv.getContext("2d");
+      var flakes = [], W, H, dpr;
+      function size() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = cv.width = innerWidth * dpr;
+        H = cv.height = innerHeight * dpr;
+        var count = Math.round(Math.min(110, innerWidth / 11));
+        flakes = [];
+        for (var i = 0; i < count; i++) flakes.push(make(true));
+      }
+      function make(anywhere) {
+        var r = (Math.random() * 2.2 + 0.6) * dpr;
+        return {
+          x: Math.random() * W,
+          y: anywhere ? Math.random() * H : -10 * dpr,
+          r: r,
+          vy: (0.25 + r / dpr * 0.22) * dpr,
+          sway: Math.random() * Math.PI * 2,
+          swaySpeed: 0.004 + Math.random() * 0.01,
+          a: 0.35 + Math.random() * 0.5
+        };
+      }
+      function tick() {
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < flakes.length; i++) {
+          var f = flakes[i];
+          f.sway += f.swaySpeed;
+          f.y += f.vy;
+          f.x += Math.sin(f.sway) * 0.35 * dpr;
+          if (f.y > H + 10) flakes[i] = make(false);
+          var g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 2);
+          g.addColorStop(0, "rgba(255,255,255," + f.a + ")");
+          g.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.r * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        requestAnimationFrame(tick);
+      }
+      if (!reduce) {
+        size();
+        addEventListener("resize", size);
+        requestAnimationFrame(tick);
+      }
+    })();
+  </script>
+</body>
+</html>
