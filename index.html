@@ -7,7 +7,7 @@
   <meta name="description" content="Rutu & Malav — something beautiful is happening soon.">
   <meta name="theme-color" content="#e4edf3">
   <meta property="og:title" content="Rutu & Malav · Happening Soon">
-  <meta property="og:description" content="Something beautiful is on its way. Watercolours by Rutu.">
+  <meta property="og:description" content="Something beautiful is on its way.">
   <meta property="og:image" content="https://rutuwedsmalav.com/assets/art/share.jpg">
   <meta property="og:url" content="https://rutuwedsmalav.com/">
   <meta name="twitter:card" content="summary_large_image">
@@ -32,7 +32,7 @@
     :root {
       --paper: #fbf7ee;
       --ratio: 1.531;   /* Fuji painting width / height */
-      --fade: 2.6s;
+      --fade: 3.6s;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
@@ -42,14 +42,17 @@
       font-family: "Cormorant Garamond", Georgia, serif;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
-      transition: --ink 2.4s ease, --ink-soft 2.4s ease, --accent 2.4s ease, --kicker 2.4s ease,
-                  --card-bg 2.4s ease, --card-line 2.4s ease, --shadow 2.4s ease, --glow 2.4s ease,
-                  --sig 2.4s ease, --grain 2.4s ease;
+      transition: --ink 3.4s ease-in-out, --ink-soft 3.4s ease-in-out, --accent 3.4s ease-in-out, --kicker 3.4s ease-in-out,
+                  --card-bg 3.4s ease-in-out, --card-line 3.4s ease-in-out, --shadow 3.4s ease-in-out, --glow 3.4s ease-in-out,
+                  --sig 3.4s ease-in-out, --grain 3.4s ease-in-out;
     }
 
     /* ---------- Each painting is a scene; one is "on" at a time ---------- */
-    .scene { position: absolute; inset: 0; opacity: 0; transition: opacity var(--fade) ease; pointer-events: none; overflow: hidden; }
-    .scene.on { opacity: 1; }
+    .scene { position: absolute; inset: 0; opacity: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    /* the new painting dissolves in on top while the old one stays fully visible underneath,
+       so the screen never dips or flickers between paintings */
+    .scene.on { opacity: 1; z-index: 2; transition: opacity var(--fade) cubic-bezier(.4, 0, .2, 1); }
+    .scene.prev { opacity: 1; z-index: 1; }
     .scenes { position: fixed; inset: -16px; }
 
     /* Scene: Fuji */
@@ -113,12 +116,12 @@
     }
     .garden img:nth-child(even) { animation-name: float-b; animation-duration: 11s; }
     .garden img:nth-child(3n) { animation-duration: 13s; }
-    .garden.on img { opacity: 1; scale: 1; filter: blur(0); }
+    .garden.on img, .garden.prev img { opacity: 1; scale: 1; filter: blur(0); }
 
     /* Scenes: sunset, aurora, winter — one painting each, gently breathing */
     .paint picture, .paint img.art { position: absolute; inset: 0; width: 100%; height: 100%; }
     .paint img.art { object-fit: cover; object-position: var(--pos, 50% 50%); transform: scale(1.04); }
-    .paint.on img.art { animation: drift 24s ease-out forwards; }
+    .paint.on img.art, .paint.prev img.art { animation: drift 24s ease-out forwards; }
     @keyframes drift { from { transform: scale(1.04); } to { transform: scale(1.11) translate3d(-0.6%, -0.5%, 0); } }
 
     /* sunset: Rutu's birds take flight */
@@ -189,7 +192,7 @@
       text-align: center; pointer-events: auto;
       transform: translate(-50%, -50%);
       opacity: 0;
-      transition: opacity 1.8s ease 1s, top 2.6s cubic-bezier(.45, 0, .2, 1);
+      transition: opacity 1.8s ease 1s, top 3.4s cubic-bezier(.45, 0, .25, 1);
     }
     .ready .card { opacity: 1; }
     .card .face {
@@ -513,7 +516,7 @@
 
       // ---------- the slideshow: day to night and round again ----------
       var order = ["fuji", "garden", "sunset", "aurora", "winter"];
-      var stay = { fuji: 16000, garden: 14000, sunset: 15000, aurora: 15000, winter: 15000 };
+      var stay = { fuji: 12000, garden: 10000, sunset: 10000, aurora: 10000, winter: 10000 };
       var themeColor = { fuji: "#e4edf3", garden: "#fbf7ee", sunset: "#7a2c55", aurora: "#1b5a3a", winter: "#13244a" };
       var scenes = {};
       [].forEach.call(document.querySelectorAll(".scene"), function (el) { scenes[el.dataset.scene] = el; });
@@ -522,7 +525,14 @@
       function show(n) {
         cur = (n + order.length) % order.length;
         var name = order[cur];
-        for (var k in scenes) scenes[k].classList.toggle("on", k === name);
+        var old = document.querySelector(".scene.on");
+        if (old && old !== scenes[name]) {
+          [].forEach.call(document.querySelectorAll(".scene.prev"), function (el) { el.classList.remove("prev"); });
+          old.classList.remove("on"); old.classList.add("prev");
+          clearTimeout(show.clean);
+          show.clean = setTimeout(function () { old.classList.remove("prev"); }, 3800);
+        }
+        scenes[name].classList.add("on");
         body.dataset.scene = name;
         meta.setAttribute("content", themeColor[name]);
         if (window.setFall) window.setFall(name === "winter" ? "snow" : (name === "fuji" || name === "garden") ? "blossom" : "none");
