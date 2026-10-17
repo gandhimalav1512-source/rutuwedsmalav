@@ -87,6 +87,39 @@
     @keyframes sway-l { from { transform: rotate(-0.9deg); } to { transform: rotate(0.7deg) translateY(4px); } }
     @keyframes sway-r { from { transform: rotate(0.8deg) translateY(3px); } to { transform: rotate(-0.8deg); } }
 
+    /* ---------- Scene 2: Rutu's flower painting, flowers swaying on paper ---------- */
+    .fuji { transition: opacity 3s ease; }
+    .garden {
+      position: fixed; inset: 0; opacity: 0; pointer-events: none;
+      transition: opacity 3s ease;
+      --u: min(1vw, 1.75vh);
+      background:
+        radial-gradient(ellipse 40% 30% at 18% 20%, rgba(232, 126, 106, 0.10), transparent 70%),
+        radial-gradient(ellipse 35% 30% at 80% 25%, rgba(84, 140, 204, 0.10), transparent 70%),
+        radial-gradient(ellipse 45% 35% at 75% 80%, rgba(240, 170, 80, 0.10), transparent 70%),
+        radial-gradient(ellipse 40% 35% at 20% 85%, rgba(90, 150, 110, 0.10), transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .3 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+        var(--paper);
+    }
+    .garden img {
+      position: absolute; height: auto;
+      left: calc(var(--lx) * 1%); top: calc(var(--ly) * 1%); width: calc(var(--lw) * var(--u));
+      rotate: var(--r);
+      opacity: 0; scale: 0.7; filter: blur(5px);
+      transition: opacity 1.8s ease, scale 2.4s cubic-bezier(.2, .8, .25, 1.12), filter 1.8s ease;
+      animation: float-a 9s ease-in-out infinite alternate;
+    }
+    .garden img:nth-child(even) { animation-name: float-b; animation-duration: 11s; }
+    .garden img:nth-child(3n) { animation-duration: 13s; }
+    body.floral .garden { opacity: 1; }
+    body.floral .garden img { opacity: 1; scale: 1; filter: blur(0); }
+    body.floral .fuji { opacity: 0; }
+    body.floral .bloom { opacity: 0; scale: 0.8; transition-delay: 0s; }
+    @media (orientation: portrait) {
+      .garden { --u: min(1vw, 0.48vh); }
+      .garden img { left: calc(var(--px) * 1%); top: calc(var(--py) * 1%); width: calc(var(--pw) * var(--u)); }
+    }
+
     #petals { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 
     /* ---------- The card ---------- */
@@ -98,9 +131,9 @@
       padding: 28px 22px calc(9vh + 56px + env(safe-area-inset-bottom));
     }
     .card {
-      --w: min(500px, 82vw);
+      --w: min(420px, 74vw);
       position: relative; width: var(--w);
-      padding: calc(var(--w) * 0.17) calc(var(--w) * 0.09) calc(var(--w) * 0.13);
+      padding: calc(var(--w) * 0.14) calc(var(--w) * 0.07) calc(var(--w) * 0.1);
       text-align: center;
       opacity: 0; translate: 0 26px;
       transition: opacity 1.8s ease 1s, translate 2.2s cubic-bezier(.2, .7, .2, 1) 1s;
@@ -135,15 +168,15 @@
     @keyframes float-b { from { transform: rotate(2deg) translateY(-3px); } to { transform: rotate(-2deg) translateY(3px); } }
 
     .kicker {
-      font-size: clamp(0.72rem, min(1.6vw, 1.9vh), 0.95rem);
-      letter-spacing: 0.42em; padding-left: 0.42em; text-transform: uppercase;
+      font-size: calc(var(--w) * 0.026);
+      letter-spacing: 0.38em; padding-left: 0.38em; text-transform: uppercase;
       color: var(--leaf); font-weight: 500;
       opacity: 0; animation: rise 1.6s 2.2s ease-out forwards;
     }
     .names {
       font-family: "Pinyon Script", cursive; font-weight: 400;
-      font-size: calc(var(--w) * 0.155);
-      line-height: 1.1; margin: 0.18em 0 0.02em;
+      font-size: calc(var(--w) * 0.15);
+      line-height: 1.05; margin: 0.12em 0 0;
       color: var(--ink);
       opacity: 0; animation: ink 2.4s 2.5s ease-out forwards;
     }
@@ -152,7 +185,7 @@
 
     .rule {
       display: flex; align-items: center; justify-content: center; gap: 12px;
-      margin: 0.4rem auto 0.9rem;
+      margin: 0.2rem auto 0.55rem;
       opacity: 0; animation: rise 1.4s 3.2s ease-out forwards;
     }
     .rule span { height: 1px; width: 0; background: linear-gradient(90deg, rgba(217, 164, 65, 0), var(--gold), rgba(217, 164, 65, 0)); animation: grow 2.2s 3.3s ease-out forwards; }
@@ -177,8 +210,8 @@
     @keyframes shimmer { 0% { background-position: 100% 0; } 40%, 100% { background-position: 0% 0; } }
 
     .line {
-      margin-top: 0.9rem;
-      font-size: calc(var(--w) * 0.036); font-style: italic;
+      margin-top: 0.55rem;
+      font-size: calc(var(--w) * 0.04); font-style: italic;
       color: var(--ink-soft);
       opacity: 0; animation: rise 1.8s 5.2s ease-out forwards;
     }
@@ -200,7 +233,7 @@
     @media (orientation: portrait) {
       .branch.left  { width: 68vw; }
       .branch.right { width: 58vw; }
-      .card { --w: min(540px, 80vw); }
+      .card { --w: min(460px, 74vw); }
       .bloom.daisy { width: 32%; left: -12%; top: -17%; }
       .bloom.fan   { width: 50%; right: -12%; bottom: -14%; }
       .bloom.sprig { width: 36%; left: -10%; bottom: -9%; }
@@ -209,7 +242,7 @@
     /* phones turned sideways */
     @media (max-height: 500px) and (orientation: landscape) {
       main { padding: 10px 20px 42px; }
-      .card { --w: min(400px, 46vw); padding-top: calc(var(--w) * 0.08); padding-bottom: calc(var(--w) * 0.08); }
+      .card { --w: min(340px, 40vw); padding-top: calc(var(--w) * 0.08); padding-bottom: calc(var(--w) * 0.08); }
       .kicker { display: none; }
       .bloom.daisy { width: 26%; left: -15%; top: -16%; }
       .bloom.anem { width: 15%; top: -14%; }
@@ -219,7 +252,7 @@
     }
     /* big screens */
     @media (min-width: 1800px) and (min-height: 1000px) {
-      .card { --w: min(760px, 40vw); }
+      .card { --w: min(620px, 32vw); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -230,14 +263,29 @@
   </style>
 </head>
 <body>
-  <div class="world" aria-hidden="true">
+  <div class="world fuji" aria-hidden="true">
     <div class="canvas" id="canvas">
       <img class="painting" src="assets/art/fuji.jpg" alt="" decoding="async" id="painting">
     </div>
   </div>
-  <div class="canopy" aria-hidden="true">
+  <div class="canopy fuji" aria-hidden="true">
     <img class="branch left" src="assets/art/branch-left.webp" alt="">
     <img class="branch right" src="assets/art/branch-right.webp" alt="">
+  </div>
+  <div class="garden" id="garden" aria-hidden="true">
+    <img src="assets/art/daisy.webp"       alt="" style="--lx:7;  --ly:9;  --lw:17; --px:-2; --py:15; --pw:46; --r:-8deg">
+    <img src="assets/art/yellowsprig.webp" alt="" style="--lx:-1; --ly:47; --lw:21; --px:-6; --py:2;  --pw:50; --r:4deg">
+    <img src="assets/art/vine.webp"        alt="" style="--lx:5;  --ly:70; --lw:24; --px:-12;--py:84; --pw:58; --r:-4deg">
+    <img src="assets/art/bud.webp"         alt="" style="--lx:26; --ly:5;  --lw:7;  --px:42; --py:3;  --pw:17; --r:-6deg">
+    <img src="assets/art/blueflower.webp"  alt="" style="--lx:33; --ly:9;  --lw:9;  --px:40; --py:13; --pw:23; --r:6deg">
+    <img src="assets/art/topvine.webp"     alt="" style="--lx:44; --ly:3;  --lw:12; --px:60; --py:13; --pw:32; --r:0deg">
+    <img src="assets/art/bluesprig.webp"   alt="" style="--lx:23; --ly:36; --lw:9;  --px:76; --py:77; --pw:30; --r:-14deg">
+    <img src="assets/art/anemone.webp"     alt="" style="--lx:58; --ly:7;  --lw:10; --px:68; --py:30; --pw:28; --r:10deg">
+    <img src="assets/art/budsprig.webp"    alt="" style="--lx:72; --ly:3;  --lw:15; --px:58; --py:1;  --pw:44; --r:2deg">
+    <img src="assets/art/midvine.webp"     alt="" style="--lx:66; --ly:30; --lw:17; --px:20; --py:33; --pw:52; --r:-6deg">
+    <img src="assets/art/leafsprig.webp"   alt="" style="--lx:85; --ly:20; --lw:14; --px:-6; --py:38; --pw:36; --r:8deg">
+    <img src="assets/art/fanflower.webp"   alt="" style="--lx:70; --ly:55; --lw:29; --px:46; --py:86; --pw:0;  --r:0deg">
+    <img src="assets/art/twig.webp"        alt="" style="--lx:84; --ly:44; --lw:15; --px:30; --py:90; --pw:40; --r:-10deg">
   </div>
   <div class="light" aria-hidden="true"></div>
   <canvas id="petals" aria-hidden="true"></canvas>
@@ -272,6 +320,17 @@
       function ready() { document.body.classList.add("ready"); }
       if (painting.complete && painting.naturalWidth) requestAnimationFrame(ready);
       else { painting.addEventListener("load", ready); painting.addEventListener("error", ready); setTimeout(ready, 4000); }
+
+      // drift between Rutu's two paintings
+      var garden = document.getElementById("garden");
+      [].forEach.call(garden.children, function (im, i) { im.style.transitionDelay = (0.4 + i * 0.18).toFixed(2) + "s"; });
+      var floral = false;
+      function cycle() {
+        floral = !floral;
+        document.body.classList.toggle("floral", floral);
+        setTimeout(cycle, floral ? 14000 : 18000);
+      }
+      setTimeout(cycle, 18000);
 
       // light glinting on the lake (positions are % of the painting)
       var canvas = document.getElementById("canvas");
