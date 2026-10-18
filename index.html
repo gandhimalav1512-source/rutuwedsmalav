@@ -427,6 +427,24 @@
       --shadow: rgba(5, 15, 45, 0.55); --glow: rgba(170, 205, 255, 0.22); --grain: 0.25;
     }
 
+
+    .signature .by-malav, .photos .signature .by-rutu { display: none; }
+    .photos .signature .by-malav { display: inline; }
+    /* ---------- Photographs: gentler drift, lighter frame ---------- */
+    .photo.on img.art, .photo.prev img.art { animation-duration: 12s; }
+    @media (min-aspect-ratio: 1/1) {
+      .photo.framed .backdrop { filter: blur(28px) saturate(1.15); transform: scale(1.15); }
+      .photo.framed img.art { left: 50%; translate: -50% -50%; height: 84vh; max-width: 60vw; border-width: 1vh; transform: none; }
+      .photo.framed.on img.art, .photo.framed.prev img.art { animation: photo-float 10s ease-in-out infinite alternate; }
+    }
+    @keyframes photo-float { from { transform: scale(1); } to { transform: scale(1.025); } }
+    [data-scene="snowcampus"] { --ink: #24324a; --ink-soft: #4a5a74; --accent: #9c2b2b; --card-bg: rgba(255, 255, 255, 0.78); --card-line: rgba(156, 43, 43, 0.4); --shadow: rgba(30, 40, 60, 0.3); --sig: #24324a; }
+    [data-scene="cloister"], [data-scene="vault"] { --ink: #fff8ea; --ink-soft: rgba(255, 244, 222, 0.9); --accent: #e9a640; --card-bg: rgba(60, 44, 24, 0.42); --card-line: rgba(233, 166, 64, 0.55); --shadow: rgba(40, 25, 10, 0.45); }
+    [data-scene="lakeside"], [data-scene="clocktower"] { --ink: #ffffff; --ink-soft: rgba(240, 248, 255, 0.92); --accent: #ffb547; --card-bg: rgba(20, 70, 140, 0.38); --card-line: rgba(255, 181, 71, 0.55); --shadow: rgba(10, 40, 90, 0.4); }
+    [data-scene="autumn"] { --ink: #fff6ea; --ink-soft: rgba(255, 240, 225, 0.9); --accent: #e0442c; --card-bg: rgba(40, 50, 70, 0.42); --card-line: rgba(224, 68, 44, 0.55); --shadow: rgba(20, 25, 40, 0.45); }
+    [data-scene="bridge"] { --ink: #fff4dc; --ink-soft: rgba(255, 240, 210, 0.9); --accent: #f5c26b; --card-bg: rgba(14, 20, 24, 0.5); --card-line: rgba(245, 194, 107, 0.55); --shadow: rgba(0, 0, 0, 0.55); }
+    [data-scene="bench"] { --ink: #ffffff; --ink-soft: rgba(240, 255, 240, 0.92); --accent: #c9e46a; --card-bg: rgba(30, 60, 30, 0.4); --card-line: rgba(201, 228, 106, 0.55); --shadow: rgba(10, 30, 10, 0.45); }
+
     /* ---------- Phones and tablets held upright ---------- */
     @media (orientation: portrait) {
       .branch.left  { width: 68vw; }
@@ -534,6 +552,35 @@
       </picture>
       <div class="sky" data-stars="28" data-top="3" data-bottom="45"></div>
     </div>
+
+    <!-- Photographs by Malav -->
+    <div class="scene paint photo" data-scene="snowcampus" style="--pos: 70% 50%">
+      <img class="art" data-src="assets/photo/snowcampus.jpg" alt="">
+    </div>
+    <div class="scene paint framed photo" data-scene="cloister" style="--bg: url(assets/photo/cloister-bg.jpg)">
+      <div class="backdrop"></div>
+      <img class="art" data-src="assets/photo/cloister.jpg" alt="">
+    </div>
+    <div class="scene paint photo" data-scene="lakeside" style="--pos: 32% 82%">
+      <img class="art" data-src="assets/photo/lakeside.jpg" alt="">
+    </div>
+    <div class="scene paint framed photo" data-scene="vault" style="--bg: url(assets/photo/vault-bg.jpg)">
+      <div class="backdrop"></div>
+      <img class="art" data-src="assets/photo/vault.jpg" alt="">
+    </div>
+    <div class="scene paint photo" data-scene="autumn" style="--pos: 44% 60%">
+      <img class="art" data-src="assets/photo/autumn.jpg" alt="">
+    </div>
+    <div class="scene paint framed photo" data-scene="clocktower" style="--bg: url(assets/photo/clocktower-bg.jpg)">
+      <div class="backdrop"></div>
+      <img class="art" data-src="assets/photo/clocktower.jpg" alt="">
+    </div>
+    <div class="scene paint photo" data-scene="bridge" style="--pos: 50% 50%">
+      <img class="art" data-src="assets/photo/bridge.jpg" alt="">
+    </div>
+    <div class="scene paint photo" data-scene="bench" style="--pos: 52% 70%">
+      <img class="art" data-src="assets/photo/bench.jpg" alt="">
+    </div>
   </div>
 
   <canvas id="petals" aria-hidden="true"></canvas>
@@ -591,7 +638,7 @@
     </div>
   </div>
   <div id="yt" aria-hidden="true"></div>
-  <p class="signature">Watercolours by <b>Rutu</b></p>
+  <p class="signature"><span class="by-rutu">Watercolours by <b>Rutu</b></span><span class="by-malav">Photographs by <b>Malav</b></span></p>
 
   <script>
     (function () {
@@ -645,10 +692,12 @@
       });
 
       // ---------- the slideshow: morning to night, then round again ----------
-      var order = ["fuji", "winter", "aurora", "sunset", "lake", "boat", "sunflower", "anemone", "purple"];
+      var order = ["fuji", "winter", "aurora", "sunset", "lake", "boat", "sunflower", "anemone", "purple",
+                   "snowcampus", "cloister", "lakeside", "vault", "autumn", "clocktower", "bridge", "bench"];
       var STAY = 5000, FIRST = 9500;
-      var themeColor = { fuji: "#e4edf3", lake: "#3a9fc0", boat: "#2a6f9a", sunflower: "#f6e7a4", anemone: "#f4eee2", purple: "#6b4aa0", sunset: "#7a2c55", aurora: "#1b5a3a", winter: "#13244a" };
-      var fall = { fuji: "blossom", anemone: "leaf", winter: "snow" };
+      var themeColor = { fuji: "#e4edf3", lake: "#3a9fc0", boat: "#2a6f9a", sunflower: "#f6e7a4", anemone: "#f4eee2", purple: "#6b4aa0", sunset: "#7a2c55", aurora: "#1b5a3a", winter: "#13244a",
+        snowcampus: "#e9edf2", cloister: "#6b5434", lakeside: "#2f6fc0", vault: "#7a6a44", autumn: "#5a6a80", clocktower: "#2f78d0", bridge: "#121a1e", bench: "#3f6a2a" };
+      var fall = { fuji: "blossom", anemone: "leaf", winter: "snow", snowcampus: "snow", bridge: "snow", autumn: "leaf" };
       var scenes = {};
       [].forEach.call(document.querySelectorAll(".scene"), function (el) { scenes[el.dataset.scene] = el; });
       var meta = document.querySelector('meta[name="theme-color"]');
@@ -679,6 +728,7 @@
         }
         scenes[name].classList.add("on");
         body.dataset.scene = name;
+        body.classList.toggle("photos", scenes[name].classList.contains("photo"));
         meta.setAttribute("content", themeColor[name]);
         setStamp(name);
         sheen.classList.remove("go"); void sheen.offsetWidth; sheen.classList.add("go");
