@@ -756,12 +756,12 @@
           if (v === to) { clearInterval(fadeT); if (done) done(); }
         }, 80);
       }
-      // if one upload is blocked where the guest is, try the next official one; last resort, open YouTube Music
+      // if one upload is blocked where the guest is, quietly try the next official one
       var giveUp = false, watchdog;
       function next() {
         tryAt++;
         if (tryAt < LIST.length) { VIDEO = LIST[tryAt]; player.loadVideoById({ videoId: VIDEO }); player.unMute(); player.setVolume(80); armWatchdog(); }
-        else { clearTimeout(watchdog); btn.classList.remove("loading", "playing"); label.textContent = "Listen on YouTube"; playing = false; giveUp = true; }
+        else { clearTimeout(watchdog); btn.classList.remove("loading", "playing"); label.textContent = "Song unavailable here"; playing = false; giveUp = true; }
       }
       function armWatchdog() {
         clearTimeout(watchdog);
@@ -772,7 +772,7 @@
         playing = true; armWatchdog();
       }
       btn.addEventListener("click", function () {
-        if (giveUp) { window.open("https://music.youtube.com/watch?v=ii9KLQoV78I", "_blank", "noopener"); return; }
+        if (giveUp) return;
         if (!playing) {
           btn.classList.add("loading"); label.textContent = "Starting…";
           if (ready) start(); else wantPlay = true;
