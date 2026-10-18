@@ -296,7 +296,9 @@
 
 
     /* ---------- Music player: a small pill, songs listed in SONGS below ---------- */
-    #yt { position: fixed; left: -400px; bottom: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; }
+    /* the hidden YouTube player stays inside the screen: Android Chrome skips loading, or throttles,
+       iframes that sit off-screen, which left the player silent or stuck */
+    #yt { position: fixed; left: 0; bottom: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; z-index: -1; }
     .player {
       position: fixed; z-index: 5; left: 12px; bottom: calc(10px + env(safe-area-inset-bottom));
       font-family: "Cormorant Garamond", Georgia, serif; color: var(--ink);
@@ -889,7 +891,7 @@
     (function () {
       var el = function (id) { return document.getElementById(id); };
       var box = el("player"), list = el("tracks"), title = el("nowTitle"), artist = el("nowArtist"), note = el("note");
-      var player, ready = false, playing = false, song = 0, alt = 0, fadeT, watchdog, noteT, pending = false;
+      var player, ready = false, want = false, song = 0, alt = 0, skipped = 0, fadeT, stallT, noteT, pending = false, started = false;
 
       SONGS.forEach(function (s, i) {
         var b = document.createElement("button");
@@ -899,67 +901,95 @@
         list.appendChild(b);
       });
       function paint() {
-        title.textContent = SONGS[song].title; artist.textContent = SONGS[song].artist;
+        title.textContent = started ? SONGS[song].title : "Play our songs";
+        artist.textContent = SONGS[song].artist;
         [].forEach.call(list.children, function (b, i) { b.classList.toggle("on", i === song); });
       }
-      function say(msg) { note.textContent = msg; note.classList.add("show"); clearTimeout(noteT); noteT = setTimeout(function () { note.classList.remove("show"); }, 2600); }
+      function say(msg) { note.textContent = msg; note.classList.add("show"); clearTimeout(noteT); noteT = setTimeout(function () { note.classList.remove("show"); }, 3000); }
+      // the button always shows what the player is really doing
+      function ui(state) {
+        box.classList.toggle("loading", state === "loading");
+        box.classList.toggle("playing", state === "playing");
+      }
 
       window.onYouTubeIframeAPIReady = function () {
         player = new YT.Player("yt", {
           width: 200, height: 200, videoId: SONGS[0].ids[0],
-          playerVars: { playsinline: 1, controls: 0, rel: 0 },
+          playerVars: { playsinline: 1, controls: 0, rel: 0, origin: location.origin },
           events: {
-            onReady: function () { ready = true; if (pending) play(song); },
-            onError: function () { tryNextUpload(); },
+            onReady: function () {
+              ready = true;
+              var f = player.getIframe && player.getIframe();
+              if (f) f.setAttribute("loading", "eager");
+              if (pending) { pending = false; start(); }
+            },
+            onError: function () { if (want) nextUpload(); },
             onStateChange: function (e) {
-              if (e.data === 1) { clearTimeout(watchdog); box.classList.remove("loading"); box.classList.add("playing"); }
-              if (e.data === 0) play(song + 1);            // song ended: on to the next one
+              var st = e.data;
+              if (st === 1) {                                   // playing
+                clearTimeout(stallT); skipped = 0; started = true; paint();
+                if (want) ui("playing"); else player.pauseVideo();
+              } else if (st === 2) {                            // paused by the phone (call, other app, headphones out)
+                // ignore the stray "paused" the old song sends while we switch to a new one
+                var cur = player.getVideoData && player.getVideoData().video_id;
+                if (!fadingOut && Date.now() - loadedAt > 2500 && cur === SONGS[song].ids[alt]) { want = false; ui("idle"); }
+              } else if (st === 3) {                            // buffering: slow network or an ad; just wait
+                if (want) ui("loading");
+              } else if (st === 0) {                            // song ended: next one
+                if (want) play(song + 1);
+              }
             }
           }
         });
       };
       var tag = document.createElement("script"); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
 
+      var fadingOut = false, loadedAt = 0;
       function fade(to, done) {
-        clearInterval(fadeT);
-        var v = player.getVolume();
+        clearInterval(fadeT); fadingOut = to === 0;
+        var v = player.getVolume ? player.getVolume() : 0;
         fadeT = setInterval(function () {
-          v += to > v ? Math.min(3, to - v) : -Math.min(6, v - to);
+          v += to > v ? Math.min(4, to - v) : -Math.min(8, v - to);
           player.setVolume(v);
-          if (v === to) { clearInterval(fadeT); if (done) done(); }
-        }, 80);
+          if (v === to) { clearInterval(fadeT); fadingOut = false; if (done) done(); }
+        }, 70);
       }
-      function load() {
+      // nothing happened at all: usually the phone blocked sound before a tap reached the player
+      function armStall() {
+        clearTimeout(stallT);
+        stallT = setTimeout(function () {
+          if (!want) return;
+          var st = player.getPlayerState();
+          if (st === -1 || st === 5) { want = false; ui("idle"); say("Tap ▶ once more to start the music"); }
+        }, 9000);
+      }
+      function start() {
+        if (!ready) { pending = true; ui("loading"); return; }
+        player.unMute(); player.setVolume(0);
+        loadedAt = Date.now();
         player.loadVideoById({ videoId: SONGS[song].ids[alt] });
-        player.unMute(); player.setVolume(0); fade(80);
-        clearTimeout(watchdog);
-        watchdog = setTimeout(function () { if (playing && player.getPlayerState() !== 1) tryNextUpload(); }, 6000);
+        fade(85); armStall();
       }
-      // this upload is blocked for this guest: try another official upload, else skip to the next song
-      var skipped = 0;
-      function tryNextUpload() {
-        if (!playing) return;
+      // this upload is blocked in the guest's country: try another official upload, else the next song
+      function nextUpload() {
         alt++;
-        if (alt < SONGS[song].ids.length) { load(); return; }
-        if (++skipped >= SONGS.length) { stop(); say("Songs aren’t available in this region"); return; }
+        if (alt < SONGS[song].ids.length) { start(); return; }
+        if (++skipped >= SONGS.length) { want = false; ui("idle"); say("These songs aren’t available in this region"); return; }
         say(SONGS[song].title + " isn’t available here");
-        song = (song + 1) % SONGS.length; alt = 0; paint(); load();
+        song = (song + 1) % SONGS.length; alt = 0; paint(); start();
       }
       function play(i) {
-        song = (i + SONGS.length) % SONGS.length; alt = 0; skipped = 0; paint();
-        playing = true; box.classList.add("loading");
-        if (!ready) { pending = true; return; }
-        load();
+        song = (i + SONGS.length) % SONGS.length; alt = 0; want = true; started = true;
+        paint(); ui("loading"); start();
       }
       function stop() {
-        playing = false; pending = false; clearTimeout(watchdog);
-        box.classList.remove("playing", "loading");
-        if (ready) fade(0, function () { player.pauseVideo(); });
+        want = false; pending = false; clearTimeout(stallT); ui("idle");
+        if (ready) fade(0, function () { if (!want) player.pauseVideo(); });
       }
       el("playBtn").addEventListener("click", function () {
-        if (playing) { stop(); return; }
-        if (ready && player.getPlayerState && player.getPlayerState() === 2 && player.getVideoData().video_id === SONGS[song].ids[alt]) {
-          playing = true; player.unMute(); player.playVideo(); fade(80); return;     // resume where it paused
+        if (want) { stop(); return; }
+        if (ready && player.getPlayerState() === 2) {           // resume where it paused, inside this tap
+          want = true; ui("loading"); player.unMute(); player.playVideo(); fade(85); armStall(); return;
         }
         play(song);
       });
@@ -967,7 +997,7 @@
       el("prevBtn").addEventListener("click", function () { play(song - 1); });
       el("nowBtn").addEventListener("click", function (e) { e.stopPropagation(); box.classList.toggle("open"); });
       document.addEventListener("click", function (e) { if (!box.contains(e.target)) box.classList.remove("open"); });
-      paint(); title.textContent = "Play our songs";
+      started = false; paint();
     })();
   </script>
 </body>
