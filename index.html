@@ -340,7 +340,11 @@
     .player .note.show { opacity: 1; }
 
     /* ---------- The card docks into a slim ribbon so the paintings breathe ---------- */
-    .docked .card { opacity: 0; scale: 0.9; pointer-events: none; transition: opacity 0.9s ease, scale 0.9s var(--ease), top 2s var(--ease), left 2s var(--ease); }
+    /* Safari keeps drawing frosted-glass layers even inside a faded-out parent, so once the fade
+       finishes the card is hidden outright and its glass switched off */
+    .docked .card { opacity: 0; scale: 0.9; visibility: hidden; pointer-events: none;
+      transition: opacity 0.9s ease, scale 0.9s var(--ease), visibility 0s linear 0.9s, top 2s var(--ease), left 2s var(--ease); }
+    .docked .card .face { -webkit-backdrop-filter: none; backdrop-filter: none; transition: none; }
     .ribbon {
       position: fixed; z-index: 4; left: 50%; top: calc(12px + env(safe-area-inset-top));
       display: flex; align-items: baseline; gap: 10px; padding: 6px 20px 8px; border: 0; border-radius: 999px; cursor: pointer;
