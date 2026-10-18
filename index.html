@@ -294,6 +294,34 @@
     }
     .signature b { font-family: "Pinyon Script", cursive; font-weight: 400; font-size: 1rem; padding-left: 2px; }
 
+
+    /* ---------- Music: one tap plays the song, fading in ---------- */
+    #yt { position: fixed; left: -400px; bottom: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; }
+    .music {
+      position: fixed; z-index: 4; left: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px 8px 10px; border: 0; border-radius: 999px; cursor: pointer;
+      font: italic 500 0.95rem "Cormorant Garamond", Georgia, serif; color: var(--ink);
+      background: var(--card-bg); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      box-shadow: 0 8px 22px -10px var(--shadow), 0 0 0 1px var(--card-line) inset;
+      opacity: 0; animation: rise 1.6s 4s ease-out forwards;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .music .disc {
+      width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
+      background: var(--accent); color: #fff;
+    }
+    .music .disc svg { width: 13px; height: 13px; }
+    .music .bars { display: none; gap: 2px; align-items: flex-end; height: 13px; }
+    .music .bars i { width: 3px; background: #fff; border-radius: 2px; animation: eq 0.9s ease-in-out infinite alternate; }
+    .music .bars i:nth-child(2) { animation-delay: 0.3s; } .music .bars i:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes eq { from { height: 3px; } to { height: 13px; } }
+    .music.playing .bars { display: flex; } .music.playing .play { display: none; }
+    .music:not(.playing):not(.loading) .disc { animation: nudge 2.4s 6s ease-in-out infinite; }
+    @keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 var(--card-line); } 50% { box-shadow: 0 0 0 7px transparent; } }
+    .music small { display: block; font-size: 0.7rem; font-style: normal; letter-spacing: 0.08em; color: var(--ink-soft); }
+    .music .t { text-align: left; line-height: 1.1; }
+
     /* ---------- Palettes and card spots, one per painting ---------- */
     [data-scene="fuji"]   { --cy: 66%; }
     [data-scene="lake"]   {
@@ -364,7 +392,6 @@
       [data-scene="winter"]    { --cy: 36%; }
       .aurora { --pos: 72% 50%; }
       .lake { --pos: 58% 50%; }
-      .signature { right: 50%; translate: 50% 0; }
     }
     /* ---------- Phones turned sideways ---------- */
     @media (max-height: 500px) and (orientation: landscape) {
@@ -489,6 +516,11 @@
     </div>
   </main>
 
+  <button class="music" id="music" type="button" aria-label="Play Hawayein">
+    <span class="disc"><svg class="play" viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/></svg><span class="bars"><i></i><i></i><i></i></span></span>
+    <span class="t"><span id="musicLabel">Play our song</span><small>Hawayein · Pritam</small></span>
+  </button>
+  <div id="yt" aria-hidden="true"></div>
   <p class="signature">Watercolours by <b>Rutu</b></p>
 
   <script>
@@ -693,6 +725,63 @@
         addEventListener("resize", size);
         setTimeout(function () { requestAnimationFrame(tick); }, 900);
       }
+    })();
+
+    // ---------- music: Hawayein via a hidden YouTube player ----------
+    (function () {
+      var LIST = ["cYOB941gyXI", "cs1e0fRyI18", "R-SCwS6KD5k", "X1qaTAS8gVA", "ii9KLQoV78I"], tryAt = 0, VIDEO = LIST[0], btn = document.getElementById("music"), label = document.getElementById("musicLabel");
+      var player, ready = false, playing = false, wantPlay = false, fadeT;
+      window.onYouTubeIframeAPIReady = function () {
+        player = new YT.Player("yt", {
+          width: 200, height: 200, videoId: VIDEO,
+          playerVars: { playsinline: 1, controls: 0, loop: 1, playlist: VIDEO, rel: 0 },
+          events: {
+            onReady: function () { ready = true; if (wantPlay) start(); },
+            onError: function () { next(); },
+            onStateChange: function (e) {
+              if (e.data === 1) { btn.classList.remove("loading"); btn.classList.add("playing"); label.textContent = "Now playing"; }
+              if (e.data === 0) { player.seekTo(0); player.playVideo(); }
+              if (e.data === 2) { btn.classList.remove("playing"); label.textContent = "Play our song"; }
+            }
+          }
+        });
+      };
+      var tag = document.createElement("script"); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
+      function fade(to, done) {
+        clearInterval(fadeT);
+        var v = player.getVolume();
+        fadeT = setInterval(function () {
+          v += to > v ? Math.min(3, to - v) : -Math.min(6, v - to);
+          player.setVolume(v);
+          if (v === to) { clearInterval(fadeT); if (done) done(); }
+        }, 80);
+      }
+      // if one upload is blocked where the guest is, try the next official one; last resort, open YouTube Music
+      var giveUp = false, watchdog;
+      function next() {
+        tryAt++;
+        if (tryAt < LIST.length) { VIDEO = LIST[tryAt]; player.loadVideoById({ videoId: VIDEO }); player.unMute(); player.setVolume(80); armWatchdog(); }
+        else { clearTimeout(watchdog); btn.classList.remove("loading", "playing"); label.textContent = "Listen on YouTube"; playing = false; giveUp = true; }
+      }
+      function armWatchdog() {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(function () { if (playing && player.getPlayerState() !== 1) next(); }, 6000);
+      }
+      function start() {
+        player.unMute(); player.setVolume(0); player.playVideo(); fade(80);
+        playing = true; armWatchdog();
+      }
+      btn.addEventListener("click", function () {
+        if (giveUp) { window.open("https://music.youtube.com/watch?v=ii9KLQoV78I", "_blank", "noopener"); return; }
+        if (!playing) {
+          btn.classList.add("loading"); label.textContent = "Starting…";
+          if (ready) start(); else wantPlay = true;
+        } else {
+          playing = false; wantPlay = false;
+          fade(0, function () { player.pauseVideo(); });
+          btn.classList.remove("playing"); label.textContent = "Play our song";
+        }
+      });
     })();
   </script>
 </body>
