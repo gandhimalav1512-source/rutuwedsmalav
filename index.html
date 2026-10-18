@@ -295,32 +295,69 @@
     .signature b { font-family: "Pinyon Script", cursive; font-weight: 400; font-size: 1rem; padding-left: 2px; }
 
 
-    /* ---------- Music: one tap plays the song, fading in ---------- */
+    /* ---------- Music player: a small pill, songs listed in SONGS below ---------- */
     #yt { position: fixed; left: -400px; bottom: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; }
-    .music {
-      position: fixed; z-index: 4; left: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 16px 8px 10px; border: 0; border-radius: 999px; cursor: pointer;
-      font: italic 500 0.95rem "Cormorant Garamond", Georgia, serif; color: var(--ink);
+    .player {
+      position: fixed; z-index: 5; left: 12px; bottom: calc(10px + env(safe-area-inset-bottom));
+      font-family: "Cormorant Garamond", Georgia, serif; color: var(--ink);
+      opacity: 0; animation: rise 1.6s 4s ease-out forwards;
+    }
+    .player button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .pill {
+      display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 6px; border-radius: 999px;
       background: var(--card-bg); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
       box-shadow: 0 8px 22px -10px var(--shadow), 0 0 0 1px var(--card-line) inset;
-      opacity: 0; animation: rise 1.6s 4s ease-out forwards;
+    }
+    .disc { width: 32px; height: 32px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--accent) !important; color: #fff !important; }
+    .disc svg { width: 13px; height: 13px; }
+    .bars { display: none; gap: 2px; align-items: flex-end; height: 13px; }
+    .bars i { width: 3px; background: #fff; border-radius: 2px; animation: eq 0.9s ease-in-out infinite alternate; }
+    .bars i:nth-child(2) { animation-delay: 0.3s; } .bars i:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes eq { from { height: 3px; } to { height: 13px; } }
+    .player.playing .bars { display: flex; } .player.playing .play { display: none; }
+    .player:not(.playing):not(.loading) .disc { animation: nudge 2.4s 6s ease-in-out infinite; }
+    @keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 var(--card-line); } 50% { box-shadow: 0 0 0 7px transparent; } }
+    .now { text-align: left; line-height: 1.1; padding: 0 6px; max-width: 150px; }
+    .now b { display: block; font-weight: 500; font-style: italic; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .now small { display: block; font-size: 0.68rem; letter-spacing: 0.06em; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .skip { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; opacity: 0.75; }
+    .skip:hover { opacity: 1; }
+    .skip svg { width: 12px; height: 12px; }
+    .tracks {
+      position: absolute; left: 0; bottom: calc(100% + 8px); min-width: 260px; padding: 6px; border-radius: 16px;
+      background: var(--card-bg); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+      box-shadow: 0 14px 30px -12px var(--shadow), 0 0 0 1px var(--card-line) inset;
+      opacity: 0; translate: 0 8px; pointer-events: none; transition: opacity 0.35s ease, translate 0.35s ease;
+    }
+    .player.open .tracks { opacity: 1; translate: 0 0; pointer-events: auto; }
+    .tracks button { display: flex; width: 100%; align-items: baseline; gap: 8px; padding: 8px 10px; border-radius: 10px; text-align: left; }
+    .tracks button:hover { background: rgba(127, 127, 127, 0.12); }
+    .tracks button span { font-size: 0.72rem; color: var(--ink-soft); width: 12px; }
+    .tracks button em { font-size: 1rem; white-space: nowrap; }
+    .tracks button small { margin-left: auto; padding-left: 10px; font-size: 0.7rem; color: var(--ink-soft); white-space: nowrap; }
+    .tracks button.on em { color: var(--accent); }
+    .player .note { position: absolute; left: 8px; bottom: calc(100% + 6px); font-size: 0.75rem; font-style: italic; color: var(--sig); text-shadow: 0 1px 6px rgba(0,0,0,.4); opacity: 0; transition: opacity .4s; white-space: nowrap; }
+    .player .note.show { opacity: 1; }
+
+    /* ---------- The card docks into a slim ribbon so the paintings breathe ---------- */
+    .docked .card { opacity: 0; scale: 0.9; pointer-events: none; transition: opacity 0.9s ease, scale 0.9s var(--ease), top 2s var(--ease), left 2s var(--ease); }
+    .ribbon {
+      position: fixed; z-index: 4; left: 50%; top: calc(12px + env(safe-area-inset-top));
+      display: flex; align-items: baseline; gap: 10px; padding: 6px 20px 8px; border: 0; border-radius: 999px; cursor: pointer;
+      background: var(--card-bg); color: var(--ink); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      box-shadow: 0 8px 22px -12px var(--shadow), 0 0 0 1px var(--card-line) inset;
+      font-family: "Cormorant Garamond", Georgia, serif; white-space: nowrap;
+      opacity: 0; translate: -50% -14px; pointer-events: none;
+      transition: opacity 0.9s ease, translate 0.9s var(--ease);
       -webkit-tap-highlight-color: transparent;
     }
-    .music .disc {
-      width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
-      background: var(--accent); color: #fff;
-    }
-    .music .disc svg { width: 13px; height: 13px; }
-    .music .bars { display: none; gap: 2px; align-items: flex-end; height: 13px; }
-    .music .bars i { width: 3px; background: #fff; border-radius: 2px; animation: eq 0.9s ease-in-out infinite alternate; }
-    .music .bars i:nth-child(2) { animation-delay: 0.3s; } .music .bars i:nth-child(3) { animation-delay: 0.6s; }
-    @keyframes eq { from { height: 3px; } to { height: 13px; } }
-    .music.playing .bars { display: flex; } .music.playing .play { display: none; }
-    .music:not(.playing):not(.loading) .disc { animation: nudge 2.4s 6s ease-in-out infinite; }
-    @keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 var(--card-line); } 50% { box-shadow: 0 0 0 7px transparent; } }
-    .music small { display: block; font-size: 0.7rem; font-style: normal; letter-spacing: 0.08em; color: var(--ink-soft); }
-    .music .t { text-align: left; line-height: 1.1; }
+    .docked .ribbon { opacity: 1; translate: -50% 0; pointer-events: auto; transition-delay: 0.35s; }
+    .ribbon .rn { font-family: "Pinyon Script", cursive; font-size: 1.55rem; line-height: 1; }
+    .ribbon .rn i { font-style: normal; color: var(--accent); padding: 0 0.12em; }
+    .ribbon .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); align-self: center; }
+    .ribbon .rs { font-style: italic; font-size: 0.95rem; color: var(--ink-soft); }
+    @media (max-width: 560px) { .signature { bottom: calc(62px + env(safe-area-inset-bottom)); } .now { max-width: 112px; } }
+    @media (max-width: 380px) { .ribbon .rn { font-size: 1.35rem; } .ribbon .rs { font-size: 0.85rem; } .ribbon { padding: 5px 14px 7px; gap: 8px; } }
 
     /* ---------- Palettes and card spots, one per painting ---------- */
     [data-scene="fuji"]   { --cy: 66%; }
@@ -516,10 +553,22 @@
     </div>
   </main>
 
-  <button class="music" id="music" type="button" aria-label="Play Hawayein">
-    <span class="disc"><svg class="play" viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/></svg><span class="bars"><i></i><i></i><i></i></span></span>
-    <span class="t"><span id="musicLabel">Play our song</span><small>Hawayein · Pritam</small></span>
+  <button class="ribbon" id="ribbon" type="button" aria-label="Rutu and Malav, happening soon">
+    <span class="rn">Rutu<i>&amp;</i>Malav</span><span class="dot"></span><span class="rs">Happening Soon</span>
   </button>
+
+  <div class="player" id="player">
+    <div class="tracks" id="tracks" role="menu"></div>
+    <span class="note" id="note"></span>
+    <div class="pill">
+      <button class="disc" id="playBtn" type="button" aria-label="Play">
+        <svg class="play" viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/></svg><span class="bars"><i></i><i></i><i></i></span>
+      </button>
+      <button class="now" id="nowBtn" type="button" aria-label="Choose a song"><b id="nowTitle">Play our songs</b><small id="nowArtist"></small></button>
+      <button class="skip" id="prevBtn" type="button" aria-label="Previous song"><svg viewBox="0 0 12 12"><path d="M2 1.5v9M10.5 1.5v9L3.5 6z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      <button class="skip" id="nextBtn" type="button" aria-label="Next song"><svg viewBox="0 0 12 12"><path d="M10 1.5v9M1.5 1.5v9L8.5 6z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </div>
+  </div>
   <div id="yt" aria-hidden="true"></div>
   <p class="signature">Watercolours by <b>Rutu</b></p>
 
@@ -727,26 +776,59 @@
       }
     })();
 
-    // ---------- music: Hawayein via a hidden YouTube player ----------
+    // ---------- the names card docks into a ribbon so the paintings can be seen ----------
     (function () {
-      var LIST = ["cYOB941gyXI", "cs1e0fRyI18", "R-SCwS6KD5k", "X1qaTAS8gVA", "ii9KLQoV78I"], tryAt = 0, VIDEO = LIST[0], btn = document.getElementById("music"), label = document.getElementById("musicLabel");
-      var player, ready = false, playing = false, wantPlay = false, fadeT;
+      var body = document.body, card = document.getElementById("card"), ribbon = document.getElementById("ribbon"), t;
+      function dock() { body.classList.add("docked"); }
+      function peek() { body.classList.remove("docked"); clearTimeout(t); t = setTimeout(dock, 7000); }
+      t = setTimeout(dock, 9000);                       // first visit: let the card's entrance play out
+      ribbon.addEventListener("click", peek);
+      card.addEventListener("click", function () { clearTimeout(t); dock(); });
+    })();
+
+    // ---------- music: a playlist played through a hidden YouTube player ----------
+    // To add, remove or reorder songs, edit SONGS. "ids" are YouTube video ids; extra ids are
+    // other official uploads of the same song, tried in turn if one is blocked in a guest's country.
+    var SONGS = [
+      { title: "Hawayein",          artist: "Arijit Singh · Pritam",   ids: ["cYOB941gyXI", "cs1e0fRyI18", "R-SCwS6KD5k", "X1qaTAS8gVA", "ii9KLQoV78I"] },
+      { title: "Dil Kyun Yeh Mera", artist: "KK · Kites",              ids: ["GlMExeJMAGs", "M51OYEo2yjc", "P6X9x3jE_bM"] },
+      { title: "Der Lagi Lekin",    artist: "Shankar Mahadevan · ZNMD", ids: ["1maBkyzY7IA", "2apfulo5uqc", "TSOpvMfAmns"] },
+      { title: "Kaise Hua",         artist: "Vishal Mishra · Kabir Singh", ids: ["WKv07mnKVEE"] }
+    ];
+    (function () {
+      var el = function (id) { return document.getElementById(id); };
+      var box = el("player"), list = el("tracks"), title = el("nowTitle"), artist = el("nowArtist"), note = el("note");
+      var player, ready = false, playing = false, song = 0, alt = 0, fadeT, watchdog, noteT, pending = false;
+
+      SONGS.forEach(function (s, i) {
+        var b = document.createElement("button");
+        b.type = "button"; b.setAttribute("role", "menuitem");
+        b.innerHTML = "<span>" + (i + 1) + "</span><em>" + s.title + "</em><small>" + s.artist.split(" · ")[0] + "</small>";
+        b.addEventListener("click", function () { box.classList.remove("open"); play(i); });
+        list.appendChild(b);
+      });
+      function paint() {
+        title.textContent = SONGS[song].title; artist.textContent = SONGS[song].artist;
+        [].forEach.call(list.children, function (b, i) { b.classList.toggle("on", i === song); });
+      }
+      function say(msg) { note.textContent = msg; note.classList.add("show"); clearTimeout(noteT); noteT = setTimeout(function () { note.classList.remove("show"); }, 2600); }
+
       window.onYouTubeIframeAPIReady = function () {
         player = new YT.Player("yt", {
-          width: 200, height: 200, videoId: VIDEO,
-          playerVars: { playsinline: 1, controls: 0, loop: 1, playlist: VIDEO, rel: 0 },
+          width: 200, height: 200, videoId: SONGS[0].ids[0],
+          playerVars: { playsinline: 1, controls: 0, rel: 0 },
           events: {
-            onReady: function () { ready = true; if (wantPlay) start(); },
-            onError: function () { next(); },
+            onReady: function () { ready = true; if (pending) play(song); },
+            onError: function () { tryNextUpload(); },
             onStateChange: function (e) {
-              if (e.data === 1) { btn.classList.remove("loading"); btn.classList.add("playing"); label.textContent = "Now playing"; }
-              if (e.data === 0) { player.seekTo(0); player.playVideo(); }
-              if (e.data === 2) { btn.classList.remove("playing"); label.textContent = "Play our song"; }
+              if (e.data === 1) { clearTimeout(watchdog); box.classList.remove("loading"); box.classList.add("playing"); }
+              if (e.data === 0) play(song + 1);            // song ended: on to the next one
             }
           }
         });
       };
       var tag = document.createElement("script"); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
+
       function fade(to, done) {
         clearInterval(fadeT);
         var v = player.getVolume();
@@ -756,32 +838,45 @@
           if (v === to) { clearInterval(fadeT); if (done) done(); }
         }, 80);
       }
-      // if one upload is blocked where the guest is, quietly try the next official one
-      var giveUp = false, watchdog;
-      function next() {
-        tryAt++;
-        if (tryAt < LIST.length) { VIDEO = LIST[tryAt]; player.loadVideoById({ videoId: VIDEO }); player.unMute(); player.setVolume(80); armWatchdog(); }
-        else { clearTimeout(watchdog); btn.classList.remove("loading", "playing"); label.textContent = "Song unavailable here"; playing = false; giveUp = true; }
-      }
-      function armWatchdog() {
+      function load() {
+        player.loadVideoById({ videoId: SONGS[song].ids[alt] });
+        player.unMute(); player.setVolume(0); fade(80);
         clearTimeout(watchdog);
-        watchdog = setTimeout(function () { if (playing && player.getPlayerState() !== 1) next(); }, 6000);
+        watchdog = setTimeout(function () { if (playing && player.getPlayerState() !== 1) tryNextUpload(); }, 6000);
       }
-      function start() {
-        player.unMute(); player.setVolume(0); player.playVideo(); fade(80);
-        playing = true; armWatchdog();
+      // this upload is blocked for this guest: try another official upload, else skip to the next song
+      var skipped = 0;
+      function tryNextUpload() {
+        if (!playing) return;
+        alt++;
+        if (alt < SONGS[song].ids.length) { load(); return; }
+        if (++skipped >= SONGS.length) { stop(); say("Songs aren’t available in this region"); return; }
+        say(SONGS[song].title + " isn’t available here");
+        song = (song + 1) % SONGS.length; alt = 0; paint(); load();
       }
-      btn.addEventListener("click", function () {
-        if (giveUp) return;
-        if (!playing) {
-          btn.classList.add("loading"); label.textContent = "Starting…";
-          if (ready) start(); else wantPlay = true;
-        } else {
-          playing = false; wantPlay = false;
-          fade(0, function () { player.pauseVideo(); });
-          btn.classList.remove("playing"); label.textContent = "Play our song";
+      function play(i) {
+        song = (i + SONGS.length) % SONGS.length; alt = 0; skipped = 0; paint();
+        playing = true; box.classList.add("loading");
+        if (!ready) { pending = true; return; }
+        load();
+      }
+      function stop() {
+        playing = false; pending = false; clearTimeout(watchdog);
+        box.classList.remove("playing", "loading");
+        if (ready) fade(0, function () { player.pauseVideo(); });
+      }
+      el("playBtn").addEventListener("click", function () {
+        if (playing) { stop(); return; }
+        if (ready && player.getPlayerState && player.getPlayerState() === 2 && player.getVideoData().video_id === SONGS[song].ids[alt]) {
+          playing = true; player.unMute(); player.playVideo(); fade(80); return;     // resume where it paused
         }
+        play(song);
       });
+      el("nextBtn").addEventListener("click", function () { play(song + 1); });
+      el("prevBtn").addEventListener("click", function () { play(song - 1); });
+      el("nowBtn").addEventListener("click", function (e) { e.stopPropagation(); box.classList.toggle("open"); });
+      document.addEventListener("click", function (e) { if (!box.contains(e.target)) box.classList.remove("open"); });
+      paint(); title.textContent = "Play our songs";
     })();
   </script>
 </body>
