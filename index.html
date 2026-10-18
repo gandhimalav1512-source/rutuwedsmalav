@@ -350,7 +350,7 @@
       display: flex; align-items: baseline; gap: 10px; padding: 6px 20px 8px; border: 0; border-radius: 999px; cursor: pointer;
       background: var(--card-bg); color: var(--ink); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
       box-shadow: 0 8px 22px -12px var(--shadow), 0 0 0 1px var(--card-line) inset;
-      font-family: "Cormorant Garamond", Georgia, serif; white-space: nowrap;
+      font-family: "Cormorant Garamond", Georgia, serif; white-space: nowrap; cursor: default;
       opacity: 0; translate: -50% -14px; pointer-events: none;
       transition: opacity 0.9s ease, translate 0.9s var(--ease);
       -webkit-tap-highlight-color: transparent;
@@ -362,6 +362,23 @@
     .ribbon .rs { font-style: italic; font-size: 0.95rem; color: var(--ink-soft); }
     @media (max-width: 560px) { .signature { bottom: calc(62px + env(safe-area-inset-bottom)); } .now { max-width: 112px; } }
     @media (max-width: 380px) { .ribbon .rn { font-size: 1.35rem; } .ribbon .rs { font-size: 0.85rem; } .ribbon { padding: 5px 14px 7px; gap: 8px; } }
+
+
+    /* ---------- A line drifting across the screen like a lyric ---------- */
+    .lyric {
+      position: fixed; z-index: 3; left: 0; top: var(--y); pointer-events: none; white-space: nowrap;
+      font: italic 500 clamp(0.72rem, 1.6vw, 0.95rem) "Cormorant Garamond", Georgia, serif;
+      letter-spacing: 0.32em; text-transform: uppercase; color: #fffdf6;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 0 14px rgba(0, 0, 0, 0.35);
+      animation: lyric-drift var(--t) linear forwards;
+    }
+    .lyric span { display: inline-block; opacity: 0; animation: lyric-in 1.4s ease-out forwards, lyric-wave 3.2s ease-in-out infinite; animation-delay: var(--d), var(--d); }
+    @keyframes lyric-drift {
+      0% { transform: translate3d(-30vw, 0, 0); opacity: 0; } 12% { opacity: 1; } 85% { opacity: 1; }
+      100% { transform: translate3d(105vw, -2vh, 0); opacity: 0; }
+    }
+    @keyframes lyric-in { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
+    @keyframes lyric-wave { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 
     /* ---------- Palettes and card spots, one per painting ---------- */
     [data-scene="fuji"]   { --cy: 66%; }
@@ -557,9 +574,9 @@
     </div>
   </main>
 
-  <button class="ribbon" id="ribbon" type="button" aria-label="Rutu and Malav, happening soon">
+  <div class="ribbon" id="ribbon" role="banner" aria-label="Rutu and Malav, happening soon">
     <span class="rn">Rutu<i>&amp;</i>Malav</span><span class="dot"></span><span class="rs">Happening Soon</span>
-  </button>
+  </div>
 
   <div class="player" id="player">
     <div class="tracks" id="tracks" role="menu"></div>
@@ -629,7 +646,7 @@
 
       // ---------- the slideshow: morning to night, then round again ----------
       var order = ["fuji", "winter", "aurora", "sunset", "lake", "boat", "sunflower", "anemone", "purple"];
-      var STAY = 5000, FIRST = 6000;
+      var STAY = 5000, FIRST = 9500;
       var themeColor = { fuji: "#e4edf3", lake: "#3a9fc0", boat: "#2a6f9a", sunflower: "#f6e7a4", anemone: "#f4eee2", purple: "#6b4aa0", sunset: "#7a2c55", aurora: "#1b5a3a", winter: "#13244a" };
       var fall = { fuji: "blossom", anemone: "leaf", winter: "snow" };
       var scenes = {};
@@ -784,10 +801,30 @@
     (function () {
       var body = document.body, card = document.getElementById("card"), ribbon = document.getElementById("ribbon"), t;
       function dock() { body.classList.add("docked"); }
-      function peek() { body.classList.remove("docked"); clearTimeout(t); t = setTimeout(dock, 7000); }
-      t = setTimeout(dock, 9000);                       // first visit: let the card's entrance play out
-      ribbon.addEventListener("click", peek);
+      t = setTimeout(dock, 8000);                       // welcome card plays over Fuji, then folds into the ribbon for good
       card.addEventListener("click", function () { clearTimeout(t); dock(); });
+    })();
+
+    // ---------- "A new chapter begins" drifts across now and then, like a line of a song ----------
+    (function () {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var text = "A new chapter begins";
+      function sing() {
+        if (!document.body.classList.contains("docked") || document.hidden) return;
+        var el = document.createElement("div"), t = 11 + innerWidth / 260;
+        el.className = "lyric";
+        el.style.setProperty("--y", (26 + Math.random() * 40).toFixed(1) + "%");
+        el.style.setProperty("--t", t.toFixed(1) + "s");
+        text.split("").forEach(function (c, i) {
+          var s = document.createElement("span");
+          s.textContent = c === " " ? "\u00a0" : c;
+          s.style.setProperty("--d", (i * 0.09).toFixed(2) + "s");
+          el.appendChild(s);
+        });
+        document.body.appendChild(el);
+        setTimeout(function () { el.remove(); }, t * 1000 + 200);
+      }
+      setTimeout(function () { sing(); setInterval(sing, 18000); }, 10000);
     })();
 
     // ---------- music: a playlist played through a hidden YouTube player ----------
