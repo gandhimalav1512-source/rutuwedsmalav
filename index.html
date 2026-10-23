@@ -382,6 +382,28 @@
     @keyframes lyric-in { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
     @keyframes lyric-wave { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 
+
+    /* ---------- Opening: stained glass ---------- */
+    #intro { position: fixed; inset: 0; z-index: 50; background: #060405; cursor: pointer; transition: opacity 1.6s ease, filter 1.6s ease; }
+    #intro canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #intro.out { opacity: 0; filter: brightness(1.6) blur(6px); pointer-events: none; }
+    #intro p {
+      position: absolute; left: 0; right: 0; bottom: 11%; text-align: center; margin: 0;
+      font: italic 400 clamp(1rem, 2.4vw, 1.6rem) "Cormorant Garamond", Georgia, serif;
+      letter-spacing: 0.42em; padding-left: 0.42em; text-transform: uppercase; color: #f6e7c8;
+      text-shadow: 0 0 18px rgba(255, 210, 150, 0.45);
+      opacity: 0; animation: intro-words 5s 2.2s ease-in-out forwards;
+    }
+    @media (orientation: portrait) { #intro p { bottom: 15%; letter-spacing: 0.3em; padding-left: 0.3em; } }
+    @keyframes intro-words {
+      0% { opacity: 0; filter: blur(6px); letter-spacing: 0.6em; }
+      30% { opacity: 0.8; filter: blur(0); }
+      80% { opacity: 0.75; }
+      100% { opacity: 0.55; letter-spacing: 0.42em; }
+    }
+    /* everything behind the opening waits until it has finished */
+    body.intro main *, body.intro .ribbon, body.intro .player, body.intro .signature { animation-play-state: paused !important; }
+
     /* ---------- Palettes and card spots, one per painting ---------- */
     [data-scene="fuji"]   { --cy: 66%; }
     [data-scene="lake"]   {
@@ -495,7 +517,19 @@
     }
   </style>
 </head>
-<body data-scene="fuji">
+<body data-scene="fuji" class="intro">
+  <div id="intro" aria-label="A new chapter begins">
+    <canvas aria-hidden="true"></canvas>
+    <p>A new chapter begins</p>
+  </div>
+  <script>
+    // things that should only start once the stained-glass opening has finished
+    (function () {
+      var q = [], done = false;
+      window.afterIntro = function (fn) { done ? fn() : q.push(fn); };
+      window.introDone = function () { if (done) return; done = true; document.body.classList.remove("intro"); q.splice(0).forEach(function (f) { f(); }); };
+    })();
+  </script>
   <div class="scenes" id="scenes" aria-hidden="true">
 
     <div class="scene on" data-scene="fuji">
@@ -652,7 +686,7 @@
       var painting = document.getElementById("painting"), started = false;
       function ready() {
         if (started) return; started = true;
-        body.classList.add("ready");
+        afterIntro(function () { body.classList.add("ready"); });
         setTimeout(function () {
           [].forEach.call(document.querySelectorAll("[data-src]"), function (el) { el.src = el.dataset.src; });
           [].forEach.call(document.querySelectorAll("[data-srcset]"), function (el) { el.srcset = el.dataset.srcset; });
@@ -739,7 +773,7 @@
         clearTimeout(timer);
         timer = setTimeout(function () { show(cur + 1); }, STAY);
       }
-      timer = setTimeout(function () { show(1); }, FIRST);
+      afterIntro(function () { timer = setTimeout(function () { show(1); }, FIRST); });
 
       var sx = null, sy = null;
       addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
@@ -763,10 +797,10 @@
         s.textContent = c === " " ? " " : c; s.style.animationDelay = (base + i * step) + "s";
         soon.appendChild(s);
       });
-      setTimeout(function () {
+      afterIntro(function () { setTimeout(function () {
         soon.classList.add("shine");
         [].forEach.call(soon.children, function (s, i) { s.style.animationDelay = (i * 0.06) + "s"; });
-      }, reduce ? 0 : (base + text.length * step + 1.5) * 1000);
+      }, reduce ? 0 : (base + text.length * step + 1.5) * 1000); });
 
       if (reduce) return;
 
@@ -853,7 +887,7 @@
     (function () {
       var body = document.body, card = document.getElementById("card"), ribbon = document.getElementById("ribbon"), t;
       function dock() { body.classList.add("docked"); }
-      t = setTimeout(dock, 8000);                       // welcome card plays over Fuji, then folds into the ribbon for good
+      afterIntro(function () { t = setTimeout(dock, 8000); });                       // welcome card plays over Fuji, then folds into the ribbon for good
       card.addEventListener("click", function () { clearTimeout(t); dock(); });
     })();
 
@@ -876,7 +910,7 @@
         document.body.appendChild(el);
         setTimeout(function () { el.remove(); }, t * 1000 + 200);
       }
-      setTimeout(function () { sing(); setInterval(sing, 18000); }, 10000);
+      afterIntro(function () { setTimeout(function () { sing(); setInterval(sing, 18000); }, 10000); });
     })();
 
     // ---------- music: a playlist played through a hidden YouTube player ----------
@@ -1000,5 +1034,6 @@
       started = false; paint();
     })();
   </script>
+  <script src="assets/intro.js"></script>
 </body>
 </html>
