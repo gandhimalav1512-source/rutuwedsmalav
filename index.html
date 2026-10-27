@@ -14,7 +14,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Pinyon+Script&family=Italiana&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/art/fuji.jpg">
   <style>
     /* Card colours are registered so they glide from one painting's palette to the next */
@@ -402,7 +402,63 @@
       100% { opacity: 0.55; letter-spacing: 0.42em; }
     }
     /* everything behind the opening waits until it has finished */
-    body.intro main *, body.intro .ribbon, body.intro .player, body.intro .signature { animation-play-state: paused !important; }
+    body.intro main *, body.counting main *, body.intro .ribbon, body.intro .player, body.intro .signature { animation-play-state: paused !important; }
+    body.counting .card { opacity: 0 !important; }
+
+
+    /* ---------- Countdown: opens big and centred, then flies to the top right ---------- */
+    .count { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+    .cveil {
+      position: absolute; inset: 0; opacity: 0; transition: opacity 1.4s var(--ease);
+      background: radial-gradient(ellipse at 50% 48%, rgba(14, 18, 34, 0.62), rgba(10, 12, 24, 0.78));
+      -webkit-backdrop-filter: blur(7px) saturate(1.1); backdrop-filter: blur(7px) saturate(1.1);
+    }
+    .cbig {
+      position: absolute; left: 50%; top: 50%; translate: -50% -50%; text-align: center; color: #fff6e2;
+      opacity: 0; transform: scale(0.94); width: min(92vw, 1100px);
+      transition: opacity 1.4s var(--ease), transform 1.5s var(--ease);
+    }
+    .count.show .cveil { opacity: 1; }
+    .count.show:not(.fly) .cbig { opacity: 1; transform: none; }
+    .count.show:not(.fly) { pointer-events: auto; cursor: pointer; }
+    .count.fly .cveil { opacity: 0; }
+    .count.fly .cbig { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(var(--s)); transition: opacity 0.7s ease 0.75s, transform 1.5s var(--ease); }
+    .cpre { font: 400 clamp(1.5rem, 4.4vw, 2.7rem)/1 "Pinyon Script", cursive; color: #f4d58f; text-shadow: 0 0 24px rgba(244, 213, 143, 0.5); margin-bottom: 0.5em; }
+    .cunits { display: flex; justify-content: center; align-items: flex-start; gap: clamp(0.4rem, 2.4vw, 2.2rem); }
+    .cu { position: relative; min-width: 0; flex: 1 1 0; max-width: 17vw; text-align: center; }
+    .cu + .cu::before { content: ""; position: absolute; left: calc(clamp(0.4rem, 2.4vw, 2.2rem) / -2); top: 12%; bottom: 22%; width: 1px; background: linear-gradient(transparent, rgba(244, 213, 143, 0.6), transparent); }
+    .cn, .pn {
+      display: block; font-family: "Italiana", "Cormorant Garamond", serif; font-weight: 400; line-height: 1; letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums lining-nums;
+      background: linear-gradient(180deg, #fffbe9 0%, #f6d98a 48%, #c88f34 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 22px rgba(244, 200, 110, 0.35));
+    }
+    .cn { font-size: clamp(2.6rem, min(11vw, 18vh), 9.5rem); }
+    .cn.tick, .pn.tick { animation: tick 0.55s var(--ease); }
+    @keyframes tick { from { opacity: 0; transform: translateY(-0.16em); filter: blur(5px) drop-shadow(0 0 0 transparent); } to { opacity: 1; transform: none; } }
+    .cl { display: block; margin-top: 0.7em; font: 500 clamp(0.62rem, 1.5vw, 0.95rem) "Cormorant Garamond", serif; letter-spacing: 0.4em; padding-left: 0.4em; text-transform: uppercase; color: rgba(255, 240, 210, 0.85); }
+    .cdate { margin-top: 1.1em; font: 400 clamp(1.5rem, 4.2vw, 2.6rem)/1.1 "Pinyon Script", cursive; color: #fff6e2; text-shadow: 0 0 22px rgba(255, 220, 150, 0.4); }
+    .chint { margin-top: 1.4em; font: italic 400 0.85rem "Cormorant Garamond", serif; letter-spacing: 0.2em; color: rgba(255, 240, 210, 0.55); }
+    @media (orientation: portrait) {
+      .cunits { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 1rem; max-width: 20rem; margin: 0 auto; }
+      .cu { max-width: none; } .cu::before { display: none !important; }
+      .cn { font-size: clamp(3.4rem, 22vw, 6rem); }
+    }
+
+    /* the small version: always there, top right, in each painting's colours */
+    .cpill {
+      position: fixed; z-index: 4; right: 14px; top: calc(12px + env(safe-area-inset-top));
+      display: flex; align-items: baseline; gap: 10px; padding: 5px 16px 7px; border-radius: 999px;
+      background: var(--card-bg); color: var(--ink); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      box-shadow: 0 8px 22px -12px var(--shadow), 0 0 0 1px var(--card-line) inset;
+      opacity: 0; translate: 0 -8px; transition: opacity 0.9s ease, translate 0.9s var(--ease); pointer-events: none; white-space: nowrap;
+    }
+    body.count-small .cpill { opacity: 1; translate: 0 0; }
+    .cpill .pn { display: inline; font-size: 1.7rem; background: none; color: var(--accent); -webkit-background-clip: border-box; background-clip: border-box; filter: none; }
+    .cpill .pd i { font: italic 500 0.95rem "Cormorant Garamond", serif; font-style: italic; margin-left: 4px; color: var(--ink-soft); }
+    .cpill .pt { font: 500 0.95rem "Cormorant Garamond", serif; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; color: var(--ink); }
+    @media (max-width: 760px) { .cpill { top: calc(54px + env(safe-area-inset-top)); right: 12px; padding: 3px 13px 5px; } .cpill .pn { font-size: 1.35rem; } }
+    @media (prefers-reduced-motion: reduce) { .cn.tick, .pn.tick { animation: none; } }
 
     /* ---------- Palettes and card spots, one per painting ---------- */
     [data-scene="fuji"]   { --cy: 66%; }
@@ -517,7 +573,7 @@
     }
   </style>
 </head>
-<body data-scene="fuji" class="intro">
+<body data-scene="fuji" class="intro counting">
   <div id="intro" aria-label="A new chapter begins">
     <canvas aria-hidden="true"></canvas>
     <p>A new chapter begins</p>
@@ -527,6 +583,9 @@
     (function () {
       var q = [], done = false;
       window.afterIntro = function (fn) { done ? fn() : q.push(fn); };
+      var cq = [], cdone = false;
+      window.afterCount = function (fn) { cdone ? fn() : cq.push(fn); };
+      window.countDone = function () { if (cdone) return; cdone = true; document.body.classList.remove("counting"); cq.splice(0).forEach(function (f) { f(); }); };
       window.introDone = function () { if (done) return; done = true; document.body.classList.remove("intro"); q.splice(0).forEach(function (f) { f(); }); };
     })();
   </script>
@@ -619,6 +678,23 @@
     </div>
   </div>
 
+  <div class="count" id="count" aria-hidden="true">
+    <div class="cveil"></div>
+    <div class="cbig" id="cbig">
+      <p class="cpre">Counting down to</p>
+      <div class="cunits">
+        <div class="cu"><span class="cn" data-u="d">000</span><span class="cl">Days</span></div>
+        <div class="cu"><span class="cn" data-u="h">00</span><span class="cl">Hours</span></div>
+        <div class="cu"><span class="cn" data-u="m">00</span><span class="cl">Minutes</span></div>
+        <div class="cu"><span class="cn" data-u="s">00</span><span class="cl">Seconds</span></div>
+      </div>
+      <p class="cdate">18 February 2027</p>
+    </div>
+  </div>
+  <div class="cpill" id="cpill" role="timer" aria-label="Time until 18 February 2027">
+    <span class="pd"><b class="pn" data-p="d">000</b><i>days</i></span>
+    <span class="pt" data-p="t">00:00:00</span>
+  </div>
   <canvas id="petals" aria-hidden="true"></canvas>
 
   <main>
@@ -773,7 +849,7 @@
         clearTimeout(timer);
         timer = setTimeout(function () { show(cur + 1); }, STAY);
       }
-      afterIntro(function () { timer = setTimeout(function () { show(1); }, FIRST); });
+      afterCount(function () { timer = setTimeout(function () { show(1); }, FIRST); });
 
       var sx = null, sy = null;
       addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
@@ -797,7 +873,7 @@
         s.textContent = c === " " ? " " : c; s.style.animationDelay = (base + i * step) + "s";
         soon.appendChild(s);
       });
-      afterIntro(function () { setTimeout(function () {
+      afterCount(function () { setTimeout(function () {
         soon.classList.add("shine");
         [].forEach.call(soon.children, function (s, i) { s.style.animationDelay = (i * 0.06) + "s"; });
       }, reduce ? 0 : (base + text.length * step + 1.5) * 1000); });
@@ -887,7 +963,7 @@
     (function () {
       var body = document.body, card = document.getElementById("card"), ribbon = document.getElementById("ribbon"), t;
       function dock() { body.classList.add("docked"); }
-      afterIntro(function () { t = setTimeout(dock, 8000); });                       // welcome card plays over Fuji, then folds into the ribbon for good
+      afterCount(function () { t = setTimeout(dock, 8000); });                       // welcome card plays over Fuji, then folds into the ribbon for good
       card.addEventListener("click", function () { clearTimeout(t); dock(); });
     })();
 
@@ -910,7 +986,7 @@
         document.body.appendChild(el);
         setTimeout(function () { el.remove(); }, t * 1000 + 200);
       }
-      afterIntro(function () { setTimeout(function () { sing(); setInterval(sing, 18000); }, 10000); });
+      afterCount(function () { setTimeout(function () { sing(); setInterval(sing, 18000); }, 10000); });
     })();
 
     // ---------- music: a playlist played through a hidden YouTube player ----------
@@ -1032,6 +1108,45 @@
       el("nowBtn").addEventListener("click", function (e) { e.stopPropagation(); box.classList.toggle("open"); });
       document.addEventListener("click", function (e) { if (!box.contains(e.target)) box.classList.remove("open"); });
       started = false; paint();
+    })();
+
+    // ---------- the countdown ----------
+    var WEDDING = "2027-02-18T00:00:00+05:30";        // change this one line to move the date (India time)
+    (function () {
+      var target = new Date(WEDDING).getTime(), pad = function (n, l) { n = String(n); while (n.length < l) n = "0" + n; return n; };
+      var big = {}, small = {}, last = {};
+      [].forEach.call(document.querySelectorAll("[data-u]"), function (e) { big[e.dataset.u] = e; });
+      [].forEach.call(document.querySelectorAll("[data-p]"), function (e) { small[e.dataset.p] = e; });
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      function set(el, txt, key) {
+        if (last[key] === txt) return; last[key] = txt; el.textContent = txt;
+        if (!reduce && last._on) { el.classList.remove("tick"); void el.offsetWidth; el.classList.add("tick"); }
+      }
+      function update() {
+        var ms = Math.max(0, target - Date.now()), d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60;
+        set(big.d, pad(d, 3), "bd"); set(big.h, pad(h, 2), "bh"); set(big.m, pad(m, 2), "bm"); set(big.s, pad(s, 2), "bs");
+        set(small.d, String(d), "pd"); set(small.t, pad(h, 2) + ":" + pad(m, 2) + ":" + pad(s, 2), "pt");
+        last._on = true;
+        if (ms === 0) document.getElementById("count").querySelector(".cpre").textContent = "Today is the day";
+      }
+      update(); setInterval(update, 250);
+
+      var box = document.getElementById("count"), bigEl = document.getElementById("cbig"), shrunk = false;
+      function toCorner() {
+        if (shrunk) return; shrunk = true;
+        var pill = document.getElementById("cpill"), a = bigEl.getBoundingClientRect(), b = pill.getBoundingClientRect();
+        box.style.setProperty("--dx", (b.left + b.width / 2 - (a.left + a.width / 2)) + "px");
+        box.style.setProperty("--dy", (b.top + b.height / 2 - (a.top + a.height / 2)) + "px");
+        box.style.setProperty("--s", Math.max(0.12, b.width / a.width));
+        box.classList.add("fly");
+        setTimeout(function () { document.body.classList.add("count-small"); }, 900);
+        setTimeout(function () { box.style.display = "none"; window.countDone && window.countDone(); }, 1500);
+      }
+      box.addEventListener("click", toCorner);
+      window.afterIntro(function () {
+        box.classList.add("show");
+        setTimeout(toCorner, reduce ? 3500 : 8000);
+      });
     })();
   </script>
   <script src="assets/intro.js"></script>
